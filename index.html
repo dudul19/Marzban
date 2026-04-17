@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Information</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- CSS VARIABLES --- */
+        :root {
+            --primary-color: #594C8D;
+            --primary-hover: #463b72;
+            --bg-main: linear-gradient(135deg, #594C8D 0%, #ffffff 100%);
+            --card-bg: rgba(255, 255, 255, 0.95); 
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --link-bg: rgba(249, 250, 251, 0.8);
+            --modal-bg: white;
+            --qr-bg: #ffffff;
+            --qr-btn-bg: #e5e7eb;
+            --qr-btn-text: #374151;
+            --input-bg: rgba(255, 255, 255, 0.7);
+            --accent-green: #10b981;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #6e5eb5;
+            --primary-hover: #594C8D;
+            --bg-main: linear-gradient(135deg, #2a2342 0%, #111827 100%);
+            --card-bg: rgba(31, 41, 55, 0.95);
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --border-color: #374151;
+            --link-bg: rgba(17, 24, 39, 0.7);
+            --modal-bg: #1f2937;
+            --qr-btn-bg: #374151;
+            --qr-btn-text: #e5e7eb;
+            --input-bg: rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-main);
+            background-size: cover;
+            background-attachment: fixed;
+            color: var(--text-main);
+            margin: 0; padding: 20px;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            width: 100%; max-width: 500px;
+            padding: 30px; box-sizing: border-box;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Header */
+        .header-top {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px; margin-bottom: 25px;
+        }
+        .header-top h1 { margin: 0; font-size: 22px; }
+        .theme-toggle { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-main); }
+
+        /* Info Row */
+        .info-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 0; border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+        }
+        .info-label { color: var(--text-muted); font-weight: 500; }
+        .info-value { font-weight: 600; text-align: right; }
+
+        /* Status Badge */
+        .status {
+            padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase;
+        }
+        .active { background: #dcfce7; color: #166534; }
+        .limited { background: #fee2e2; color: #991b1b; }
+        .expired { background: #ffedd5; color: #9a3412; }
+
+        /* Progress Bar */
+        .progress-wrapper { width: 100%; margin-top: 8px; }
+        .progress-container { background: var(--border-color); border-radius: 10px; height: 8px; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--primary-color); transition: width 0.5s; }
+        .progress-bar.warning { background: #f59e0b; }
+        .progress-bar.danger { background: #ef4444; }
+
+        /* --- ACCORDION SYSTEM --- */
+        .main-dropdown { margin-top: 20px; }
+        .section-title {
+            background: var(--primary-color);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex; justify-content: space-between;
+            font-weight: 600; font-size: 15px;
+            margin-bottom: 10px;
+        }
+        .dropdown-content { display: none; margin-bottom: 15px; padding: 5px; }
+        .section-title.open + .dropdown-content { display: block; }
+
+        /* Sub Dropdown */
+        .sub-dropdown {
+            background: var(--link-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            overflow: hidden;
+        }
+        .sub-header {
+            padding: 10px 15px; cursor: pointer;
+            font-size: 14px; font-weight: 600;
+            display: flex; justify-content: space-between;
+            background: rgba(0,0,0,0.03);
+        }
+        .sub-content { display: none; padding: 10px; border-top: 1px solid var(--border-color); }
+        .sub-header.open + .sub-content { display: block; }
+
+        /* Config Cards */
+        .link-card {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 10px; margin-bottom: 8px;
+        }
+        .link-row { display: flex; gap: 8px; align-items: center; margin-top: 5px; }
+        .link-text {
+            flex: 1; background: var(--card-bg); border: 1px solid var(--border-color);
+            padding: 6px 10px; border-radius: 4px; font-size: 11px;
+            font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .app-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 0; border-bottom: 1px solid var(--border-color);
+        }
+        .app-item:last-child { border-bottom: none; }
+        .download-btn {
+            background: var(--primary-color); color: white;
+            padding: 4px 10px; border-radius: 4px; text-decoration: none; font-size: 11px;
+            font-weight: 600;
+        }
+        .best-badge { background: var(--accent-green); color: white; font-size: 9px; padding: 2px 5px; border-radius: 4px; margin-left: 5px; }
+
+        button { cursor: pointer; border: none; font-family: inherit; transition: 0.2s; }
+        .btn-copy { background: var(--primary-color); color: white; padding: 6px 10px; border-radius: 4px; font-size: 11px; }
+        .btn-qr { background: var(--qr-btn-bg); color: var(--qr-btn-text); padding: 6px 10px; border-radius: 4px; font-size: 11px; }
+
+        /* Footer */
+        .footer-buttons { display: flex; gap: 10px; margin-top: 20px; }
+        .footer-btn {
+            flex: 1; padding: 12px; border-radius: 8px; text-align: center;
+            text-decoration: none; font-size: 14px; font-weight: 600;
+        }
+        .support-btn { background: var(--qr-btn-bg); color: var(--qr-btn-text); }
+        .group-btn { background: var(--primary-color); color: white; }
+
+        /* Modal QR */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+            display: none; z-index: 999;
+        }
+        .qr-popup {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; padding: 20px; border-radius: 12px; display: none; z-index: 1000;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header-top">
+            <h1>User Dashboard</h1>
+            <button id="themeToggle" class="theme-toggle">🌙</button>
+        </div>
+
+        <div class="info-row">
+            <span class="info-label">Username</span>
+            <span class="info-value">{{ user.username }}</span>
+        </div>
+        
+        <div class="info-row">
+            <span class="info-label">Status</span>
+            <span class="info-value">
+                <span class="status {% if user.status.value == 'active' %}active{% elif user.status.value == 'expired' %}expired{% else %}limited{% endif %}">
+                    {{ user.status.value }}
+                </span>
+            </span>
+        </div>
+
+        <div class="info-row" style="flex-direction: column; align-items: stretch;">
+            <div style="display: flex; justify-content: space-between;">
+                <span class="info-label">Data Usage</span>
+                <span class="info-value">{{ user.used_traffic | bytesformat }} / {{ user.data_limit | bytesformat if user.data_limit else '∞' }}</span>
+            </div>
+            {% if user.data_limit %}
+            <div class="progress-wrapper">
+                <div class="progress-container">
+                    {% set usage = (user.used_traffic / user.data_limit * 100) %}
+                    {% if usage > 100 %}{% set usage = 100 %}{% endif %}
+                    <div class="progress-bar {% if usage > 90 %}danger{% elif usage > 75 %}warning{% endif %}" style="width: {{ usage }}%;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 5px;">
+                    <span>{{ usage | round(1) }}% Used</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="info-row">
+            <span class="info-label">Expiration Date</span>
+            <span class="info-value">
+                {% if not user.expire %}
+                    ∞
+                {% else %}
+                    {% set current_ts = now().timestamp() %}
+                    {% set rem_days = ((user.expire - current_ts) // (24 * 3600)) %}
+                    {{ user.expire | datetime }}
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: normal;">({{ rem_days | int }} days remaining)</div>
+                {% endif %}
+            </span>
+        </div>
+
+        <div class="main-dropdown">
+            <div class="section-title" onclick="toggleMain(this)">
+                <span>Access Links</span>
+                <span class="arrow">▼</span>
+            </div>
+            <div class="dropdown-content">
+                {% if user.status.value == 'active' %}
+                    {% for link in user.links %}
+                    <div class="link-card">
+                        <div style="font-size: 13px; font-weight: 600;" class="config-name" data-link="{{ link }}">Detecting...</div>
+                        <div class="link-row">
+                            <div class="link-text">{{ link }}</div>
+                            <button class="btn-copy" onclick="copyText('{{ link }}', this)">Copy</button>
+                            <button class="btn-qr" onclick="showQR('{{ link }}')">QR</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="text-align: center; font-size: 13px; color: var(--text-muted); padding: 10px;">Link Not Available</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="main-dropdown">
+            <div class="section-title" onclick="toggleMain(this)">
+                <span>How to Connect</span>
+                <span class="arrow">▼</span>
+            </div>
+            <div class="dropdown-content">
+                <div class="sub-dropdown">
+                    <div class="sub-header" onclick="toggleSub(this)"><span>iOS</span> <span>+</span></div>
+                    <div class="sub-content">
+                        <div class="app-item"><span>Streisand <span class="best-badge">Best</span></span><a href="https://apps.apple.com/us/app/streisand/id6450534064" target="_blank" class="download-btn">IOS 14+</a></div>
+                        <div class="app-item"><span>V2Box</span><a href="https://apps.apple.com/us/app/v2box-v2ray-client/id6446814690" target="_blank" class="download-btn">IOS 14+</a></div>
+                    </div>
+                </div>
+
+                <div class="sub-dropdown">
+                    <div class="sub-header" onclick="toggleSub(this)"><span>Android</span> <span>+</span></div>
+                    <div class="sub-content">
+                        <div class="app-item"><span>NetMod <span class="best-badge">Best</span></span><a href="https://play.google.com/store/search?q=netmod&c=apps&hl=id" target="_blank" class="download-btn">PlayStore</a></div>
+                        <div class="app-item">
+                            <span>v2rayNG </span>
+                            <div style="display:flex; gap:5px">
+                                <a href="https://play.google.com/store/apps/details?id=com.v2ray.ang" target="_blank" class="download-btn">PlayStore</a>
+                                <a href="https://github.com/2dust/v2rayNG/releases" target="_blank" class="download-btn">Github</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sub-dropdown">
+                    <div class="sub-header" onclick="toggleSub(this)"><span>Windows</span> <span>+</span></div>
+                    <div class="sub-content">
+                        <div class="app-item"><span>Nekoray <span class="best-badge">Best</span></span><a href="https://github.com/MatsuriDayo/nekoray/releases" target="_blank" class="download-btn">Download</a></div>
+                        <div class="app-item"><span>V2rayN </span><a href="https://en.v2rayn.org/download/" target="_blank" class="download-btn">Download</a></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-buttons">
+            <a href="https://t.me/dudulrealnofek" target="_blank" class="footer-btn support-btn">Support</a>
+            <a href="https://t.me/tfnuklir" target="_blank" class="footer-btn group-btn">Join Group</a>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="overlay" onclick="hideQR()"></div>
+    <div class="qr-popup" id="qrModal">
+        <div id="qrCode"></div>
+    </div>
+
+    <script>
+        // --- Theme ---
+        const themeBtn = document.getElementById('themeToggle');
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        themeBtn.textContent = savedTheme === 'light' ? '🌙' : '☀️';
+
+        themeBtn.onclick = () => {
+            const theme = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            themeBtn.textContent = theme === 'light' ? '🌙' : '☀️';
+        };
+
+        // --- Accordion ---
+        function toggleMain(el) {
+            el.classList.toggle('open');
+            const arrow = el.querySelector('.arrow');
+            arrow.textContent = el.classList.contains('open') ? '▲' : '▼';
+        }
+
+        function toggleSub(el) {
+            el.classList.toggle('open');
+            const icon = el.querySelector('span:last-child');
+            icon.textContent = el.classList.contains('open') ? '-' : '+';
+        }
+
+        // --- Perbaikan Tombol Copy (Fungsi Baru) ---
+        function copyText(text, btn) {
+            const originalText = btn.textContent;
+            
+            // Mencoba metode modern
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => {
+                    updateButtonStatus(btn);
+                }).catch(() => {
+                    fallbackCopy(text, btn);
+                });
+            } else {
+                // Metode Fallback untuk HTTP atau Browser lama
+                fallbackCopy(text, btn);
+            }
+        }
+
+        function fallbackCopy(text, btn) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            textArea.style.top = "0";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const success = document.execCommand('copy');
+                if (success) updateButtonStatus(btn);
+            } catch (err) {
+                console.error('Fallback Copy Gagal', err);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function updateButtonStatus(btn) {
+            const original = btn.textContent;
+            btn.textContent = 'Copied!';
+            btn.style.background = '#10b981';
+            setTimeout(() => {
+                btn.textContent = original;
+                btn.style.background = '';
+            }, 1500);
+        }
+
+        // --- Auto Config Name ---
+        document.querySelectorAll('.config-name').forEach(el => {
+            const link = el.dataset.link.toLowerCase();
+            let type = "VPN", transport = "TCP", security = "NTLS";
+            if (link.startsWith('trojan')) type = "Trojan";
+            else if (link.startsWith('vmess')) type = "Vmess";
+            else if (link.startsWith('vless')) type = "Vless";
+            if (link.includes('ws')) transport = "WS";
+            else if (link.includes('xhttp')) transport = "XHTTP";
+            if (link.includes('security=tls') || link.includes(':443')) security = "TLS";
+            el.textContent = `${type} ${transport} ${security}`;
+        });
+
+        // --- QR Modal ---
+        function showQR(link) {
+            document.getElementById('qrCode').innerHTML = '';
+            new QRCode(document.getElementById('qrCode'), { text: link, width: 200, height: 200 });
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('qrModal').style.display = 'block';
+        }
+        function hideQR() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('qrModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
